@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MessageGuard | Spam Intelligence</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <span class="brand-icon">M</span>
+            <span>MessageGuard<small>SPAM INTELLIGENCE</small></span>
+        </a>
+
+        <p class="nav-label">WORKSPACE</p>
+        <a class="nav-link active" href="/">⌕ &nbsp; Message Checker</a>
+        <a class="nav-link" href="/sender-analyzer">◎ &nbsp; Sender Analyzer</a>
+
+        <div class="sidebar-note">
+            <span class="status-dot"></span>
+            <span>ML engine ready</span>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">MESSAGE SECURITY / OVERVIEW</p>
+                <h1>Message Intelligence</h1>
+            </div>
+            <span class="model-tag">SVM · CALIBRATED</span>
+        </header>
+
+        <section class="welcome-card">
+            <div>
+                <p class="eyebrow">SMART MESSAGE ANALYSIS</p>
+                <h2>Detect suspicious messages before you trust them.</h2>
+                <p>Analyze message patterns using your trained machine-learning model.</p>
+            </div>
+            <div class="welcome-symbol">⌁</div>
+        </section>
+
+        <section class="checker-grid">
+            <div class="panel checker-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">INPUT ANALYSIS</p>
+                        <h2>Message Checker</h2>
+                    </div>
+                    <span class="small-tag">SVM MODEL</span>
+                </div>
+
+                <form method="POST" action="/">
+                    <label for="message">Message content</label>
+                    <textarea id="message" name="message" maxlength="5000"
+                              placeholder="Paste your message here..."
+                              required>{{ message }}</textarea>
+                    <div class="input-footer">
+                        <span id="charCount">0 / 5000</span>
+                        <button type="submit" class="primary-button">
+                            Analyze Message →
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel result-panel">
+                <p class="eyebrow">ANALYSIS RESULT</p>
+                {% if result %}
+                    <h2 class="result-title">{{ result.label }}</h2>
+                    <p class="muted">{{ result.explanation }}</p>
+
+                    {% if result.spam_probability is defined %}
+                    <div class="probability-row">
+                        <span>Spam probability</span>
+                        <strong>{{ result.spam_probability }}%</strong>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill danger-fill"
+                             style="width: {{ result.spam_probability }}%"></div>
+                    </div>
+
+                    <div class="probability-row">
+                        <span>Ham probability</span>
+                        <strong>{{ result.ham_probability }}%</strong>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill success-fill"
+                             style="width: {{ result.ham_probability }}%"></div>
+                    </div>
+
+                    <div class="highlight-box">
+                        <p class="eyebrow">MESSAGE SCAN</p>
+                        <p class="highlighted-message">{{ result.highlighted_message }}</p>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-result">
+                        <div class="empty-icon">⌕</div>
+                        <h3>Ready to analyze</h3>
+                        <p>Your prediction and confidence estimates will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="dashboard-section" id="model-performance">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">MACHINE LEARNING ANALYTICS</p>
+                    <h2>Model Performance</h2>
+                    <p class="muted">Evaluation results from the saved test run.</p>
+                </div>
+                <span class="small-tag">TEST SET · {{ evaluation.test_size }} MESSAGES</span>
+            </div>
+
+            <div class="metric-grid">
+                <button class="metric-card" data-metric="accuracy">
+                    <span class="metric-label">Best model accuracy</span>
+                    <strong>{{ "%.2f"|format(evaluation.models["SVM"].accuracy) }}%</strong>
+                    <span class="metric-foot">SVM · Overall correctness</span>
+                </button>
+                <button class="metric-card" data-metric="precision">
+                    <span class="metric-label">Spam precision</span>
+                    <strong>{{ "%.0f"|format(evaluation.models["SVM"].spam_precision * 100) }}%</strong>
+                    <span class="metric-foot">Reliability of spam predictions</span>
+                </button>
+                <button class="metric-card" data-metric="recall">
+                    <span class="metric-label">Spam recall</span>
+                    <strong>{{ "%.0f"|format(evaluation.models["SVM"].spam_recall * 100) }}%</strong>
+                    <span class="metric-foot">Spam detection coverage</span>
+                </button>
+                <button class="metric-card" data-metric="f1">
+                    <span class="metric-label">Spam F1-score</span>
+                    <strong>{{ "%.2f"|format(evaluation.models["SVM"].spam_f1) }}</strong>
+                    <span class="metric-foot">Balance of precision and recall</span>
+                </button>
+            </div>
+
+            <div class="panel explanation-panel" id="metricExplanation" hidden>
+                <h3 id="metricTitle"></h3>
+                <p id="metricDescription" class="muted"></p>
+            </div>
+
+            <div class="charts-grid">
+                <div class="panel chart-panel">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">BENCHMARKING</p>
+                            <h3>Model comparison</h3>
+                        </div>
+                    </div>
+                    <label for="metricSelector">Compare metric</label>
+                    <select id="metricSelector">
+                        <option value="accuracy">Accuracy</option>
+                        <option value="spam_precision">Spam precision</option>
+                        <option value="spam_recall">Spam recall</option>
+                        <option value="spam_f1">Spam F1-score</option>
+                    </select>
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+
+                <div class="panel chart-panel">
+                    <p class="eyebrow">DATA DISTRIBUTION</p>
+                    <h3>Test dataset composition</h3>
+                    <canvas id="datasetChart"></canvas>
+                    <div class="dataset-summary">
+                        <div><span class="legend-dot ham-dot"></span>
+                            Ham <strong>{{ evaluation.ham_support }}</strong>
+                        </div>
+                        <div><span class="legend-dot spam-dot"></span>
+                            Spam <strong>{{ evaluation.spam_support }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel matrix-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">CLASSIFICATION DIAGNOSTICS</p>
+                        <h3>Confusion matrix</h3>
+                        <p class="muted">SVM · Select a cell to understand the result.</p>
+                    </div>
+                </div>
+
+                {% set matrix = evaluation.models["SVM"].matrix %}
+                <div class="matrix-wrap">
+                    <table class="confusion-matrix">
+                        <thead>
+                            <tr>
+                                <th>Actual / Predicted</th>
+                                <th>Ham</th>
+                                <th>Spam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Ham</th>
+                                <td><button class="matrix-cell correct"
+                                    data-matrix="tn" data-count="{{ matrix[0][0] }}">
+                                    {{ matrix[0][0] }}<small>True negative</small>
+                                </button></td>
+                                <td><button class="matrix-cell incorrect"
+                                    data-matrix="fp" data-count="{{ matrix[0][1] }}">
+                                    {{ matrix[0][1] }}<small>False positive</small>
+                                </button></td>
+                            </tr>
+                            <tr>
+                                <th>Spam</th>
+                                <td><button class="matrix-cell incorrect"
+                                    data-matrix="fn" data-count="{{ matrix[1][0] }}">
+                                    {{ matrix[1][0] }}<small>False negative</small>
+                                </button></td>
+                                <td><button class="matrix-cell correct"
+                                    data-matrix="tp" data-count="{{ matrix[1][1] }}">
+                                    {{ matrix[1][1] }}<small>True positive</small>
+                                </button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="matrix-explanation" id="matrixExplanation">
+                    Select any matrix cell to see its meaning.
+                </div>
+            </div>
+
+            <div class="panel report-panel">
+                <div>
+                    <p class="eyebrow">EXPORT CENTER</p>
+                    <h3>Download evaluation report</h3>
+                    <p class="muted">Export the saved model metrics and confusion matrices.</p>
+                </div>
+                <div class="report-actions">
+                    <a class="secondary-button" href="/download/evaluation.csv">↓ Export CSV</a>
+                    <a class="primary-button" href="/download/evaluation.pdf">↓ Export PDF</a>
+                </div>
+            </div>
+
+            <p class="dashboard-disclaimer">
+                These metrics describe the reported test run. They do not represent
+                live user traffic. Confidence values are model estimates, not guarantees.
+            </p>
+        </section>
+
+        <footer class="page-footer">
+            MessageGuard · Machine Learning Spam Detection
+        </footer>
+    </main>
+</div>
+</body>
+</html>

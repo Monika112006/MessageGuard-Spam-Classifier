@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sender Analyzer | MessageGuard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">M</div>
+                <div>
+                    <h2>MessageGuard</h2>
+                    <p>Spam Detection System</p>
+                </div>
+            </div>
+
+            <nav class="navigation">
+                <a href="/" class="nav-link">▣ Message Checker</a>
+                <a href="/sender-analyzer" class="nav-link active">
+                    ☎ Sender Analyzer
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span class="status-dot"></span>
+                Classification System
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">MESSAGE SECURITY</p>
+                    <h1>Sender Analyzer</h1>
+                    <p class="subtitle">
+                        Check the basic format of an Indian mobile number.
+                    </p>
+                </div>
+
+                <div class="system-badge">
+                    <span class="status-dot"></span>
+                    System Ready
+                </div>
+            </header>
+
+            <section class="panel sender-panel">
+                <div class="section-heading">
+                    <div>
+                        <h2>Phone Number Validation</h2>
+                        <p>The phone number is optional.</p>
+                    </div>
+                    <span class="step-label">OPTIONAL</span>
+                </div>
+
+                <form method="POST" action="/sender-analyzer">
+                    <label for="phone_number">
+                        Mobile Number (Optional)
+                    </label>
+
+                    <input
+                        type="tel"
+                        id="phone_number"
+                        name="phone_number"
+                        value="{{ phone_number }}"
+                        placeholder="e.g. +91 98765 43210"
+                        maxlength="20"
+                    >
+
+                    <p class="field-help">
+                        Enter a 10-digit Indian mobile number,
+                        optionally prefixed with +91.
+                    </p>
+
+                    <button type="submit" class="primary-button">
+                        Check Number
+                    </button>
+                </form>
+
+                {% if result %}
+                <div class="sender-result
+                    {% if result == 'valid' %}
+                        sender-valid
+                    {% elif result == 'invalid' %}
+                        sender-invalid
+                    {% else %}
+                        sender-skipped
+                    {% endif %}">
+
+                    {% if result == 'valid' %}
+                        <h3>✓ Valid Basic Format</h3>
+                    {% elif result == 'invalid' %}
+                        <h3>! Format Not Accepted</h3>
+                    {% else %}
+                        <h3>— Validation Skipped</h3>
+                    {% endif %}
+
+                    <p>{{ message }}</p>
+                </div>
+                {% endif %}
+
+                <div class="info-note">
+                    <span>ⓘ</span>
+                    <p>
+                        This tool checks formatting only. It cannot confirm
+                        whether a number exists, is active, belongs to a
+                        particular person, or is associated with spam.
+                    </p>
+                </div>
+
+                <a href="/" class="back-link">
+                    ← Back to Message Checker
+                </a>
+            </section>
+
+            <footer class="page-footer">
+                <p>MessageGuard · Sender Analyzer</p>
+                <p>Format validation is not identity verification.</p>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
